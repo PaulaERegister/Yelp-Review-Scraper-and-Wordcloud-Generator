@@ -9,11 +9,12 @@ from bs4 import BeautifulSoup
 import ssl
 
 default_url = 'https://www.yelp.com/search?find_desc=Restaurants&find_loc='
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
 
 def read_page(location):
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
+
     url = default_url + location[0] + ',+' + location[1]
     print("Opening ", url)
     page = urllib.request.urlopen(url,context=ctx)
@@ -33,12 +34,17 @@ def soup_parser(html):
     soup = BeautifulSoup(html, 'html.parser')
     restaurant_names = []
     restaurant_links = []
+    seen = []
     for a in soup.find_all('a'):
         if 'class' in a.attrs:
             if 'lemon' in a.attrs['class'][0]:
                 if 'href' in a.attrs:
                     if '/biz' in a.attrs['href']:
-                        restaurant_links.append(a.attrs['href'])
+                        if a.attrs['href'] in restaurant_links or a.attrs['href'].split('-')[0] in seen:
+                            continue
+                        else:
+                            seen.append(a.attrs['href'].split('-')[0])
+                            restaurant_links.append(a.attrs['href'])
         if 'href' in a.attrs:
             if '/biz/' in a.attrs['href']:
                 if 'read' in a.contents[0] or len(a.contents[0]) == 0 or len(a.contents[0]) == 1:
@@ -55,7 +61,12 @@ def soup_parser(html):
     for i in range(10):
         print(f"Gathering top reviews on {restaurant_names[i]} now...")
         review_text = []
-
+        url = restaurant_links[i]
+        uh = urllib.request.urlopen(url, context=ctx)
+        html = uh.read()
+        soup = BeautifulSoup(html, 'html.parser')
+        for p in soup.find_all('p'):
+            print(p)
 
 def main():
     location = request_city()
