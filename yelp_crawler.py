@@ -14,11 +14,11 @@ ctx.verify_mode = ssl.CERT_NONE
 
 
 def request_city():
-    city = input("Please enter the city and state that you want to search for: (Ex: San Jose, CA).\n")
-    city = [x.strip() for x in city.split(',')]
+    city_string = input("Please enter the city and state that you want to search for: (Ex: San Jose, CA).\n")
+    city = [x.strip() for x in city_string.split(',')]
     if len(city[0].split()) > 1:
         city[0] = '+'.join(city[0].split())
-    return city
+    return city, city_string
 
 
 def read_page(location):
@@ -78,7 +78,7 @@ def get_reviews(restaurant_links, restaurant_names):
         soup = BeautifulSoup(html, 'html.parser')
         for p in soup.find_all('p'):
             if 'itemprop' in p.attrs:
-                if p.attrs['itemprop']=='description':
+                if p.attrs['itemprop'] == 'description':
                     text = p.get_text().strip()
                     review_text.append(text)
         reviews[str(restaurant_names[i])] = review_text
@@ -88,16 +88,16 @@ def get_reviews(restaurant_links, restaurant_names):
                 print(review)
                 print('='*100)
         else:
-            print("No reviews for ", restaurant)
+            print("No reviews for", restaurant)
     return reviews
+
+
 def soup_parser(html):
     soup = BeautifulSoup(html, 'html.parser')
 
     restaurant_links = get_restaurant_links(soup)
     restaurant_names = get_restaurant_names(soup)
     reviews = get_reviews(restaurant_links, restaurant_names)
-    print(restaurant_links)
-    print(restaurant_names)
     return restaurant_names, restaurant_links, reviews
 
 
@@ -187,11 +187,10 @@ def wordcloud_from_city(review_dict, place=None,num_restaurant=10,num_reviews=20
 
 
 def main():
-    location = request_city()
+    location, location_str = request_city()
     html = read_page(location)
-    soup_parser(html)
-    # x, y, z = soup_parser(html)
-    # wordcloud_from_city(z, place="Palo Alto, CA", num_restaurant=20)
+    x, y, z = soup_parser(html)
+    wordcloud_from_city(z, place=location_str, num_restaurant=20)
 
 
 main()
