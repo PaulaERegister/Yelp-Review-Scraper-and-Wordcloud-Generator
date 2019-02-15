@@ -81,7 +81,7 @@ def get_restaurant_names(soup):
     return restaurant_names
 
 
-def get_reviews(restaurant_links, restaurant_names):
+def get_reviews(restaurant_links, restaurant_names, num_reviews):
     """
 
     :param restaurant_links:
@@ -94,7 +94,8 @@ def get_reviews(restaurant_links, restaurant_names):
     # df = pd.DataFrame(data={'Link':restaurant_links, 'Name': restaurant_names})
 
     reviews = {}
-    for i in range(len(restaurant_links)):
+    num_reviews = min(num_reviews, len(restaurant_links), len(restaurant_names))
+    for i in range(num_reviews):
         print(f"Gathering top reviews on {restaurant_names[i]} now...")
         review_text = []
         url = restaurant_links[i]
@@ -117,13 +118,53 @@ def print_reviews(reviews, restaurant_names):
     :param restaurant_names:
     :return:
     """
-    for restaurant in restaurant_names:
-        if restaurant in reviews:
-            for review in reviews[restaurant]:
-                print(review)
-                print('='*100)
+    prompt = "Displaying reviews: How many restaurant's reviews would you like to see?\n" \
+             "\tThere are " + str(len(restaurant_names)) + " restaurants. " \
+                                                           "Type 'print' to print out a list of the available" \
+                                                           " restaurants. " \
+                                                           "\nEnter a number or the restaurant name. Press enter to " \
+                                                           "view all.\n"
+    result = input(prompt)
+
+    while not result.isdigit():
+
+        if result == 'print':
+            print_restaurant_names(restaurant_names)
+            result = input(prompt)
+
+        if result == '':
+            for restaurant in restaurant_names:
+                if restaurant in reviews:
+                    for review in reviews[restaurant]:
+                        print(review)
+                        print('=' * 100)
+                else:
+                    print("No reviews for", restaurant)
+            result = 0
+            break
+
         else:
-            print("No reviews for", restaurant)
+            if result in reviews:
+                for review in reviews[result]:
+                    print(review)
+                    print('=' * 100)
+
+            else:
+                print("Sorry, I didn't understand that input. Try again.")
+            result = input(prompt)
+
+    for i in range(int(result)):
+        if restaurant_names[i] in reviews:
+            for review in reviews[restaurant_names[i]]:
+                print(review)
+                print('=' * 100)
+        else:
+            print("No reviews for", restaurant_names[i])
+
+
+def print_restaurant_names(restaurant_names):
+    for i in range(len(restaurant_names)):
+        print(restaurant_names[i])
 
 
 def soup_parser(html):
@@ -136,7 +177,19 @@ def soup_parser(html):
 
     restaurant_links = get_restaurant_links(soup)
     restaurant_names = get_restaurant_names(soup)
-    reviews = get_reviews(restaurant_links, restaurant_names)
+    prompt = "How many restaurants would you like to gather reviews on?\n" \
+             " There are " + str(len(restaurant_names)) + " restaurants." \
+                                                          " Type 'print' to print out a list of the available restaurants.\n"
+    num_reviews = input(prompt)
+
+    while not num_reviews.isdigit():
+        if num_reviews == 'print':
+            print_restaurant_names(restaurant_names)
+        else:
+            print("I didn't understand that.")
+        num_reviews = input(prompt)
+
+    reviews = get_reviews(restaurant_links, restaurant_names, int(num_reviews))
     return restaurant_names, restaurant_links, reviews
 
 
@@ -170,7 +223,7 @@ def wordcloud_reviews(review_dict):
         stopwords.add(word)
 
     wc = WordCloud(background_color="white", max_words=50, stopwords=stopwords, max_font_size=40)
-
+    prompt = "Building wordcloud from reviews! "
     for restaurant in review_dict:
         text = '\n'.join(review_dict[restaurant])
         _ = wc.generate(text)
@@ -241,6 +294,7 @@ def wordcloud_from_city(review_dict, place=None,num_restaurant=10,num_reviews=20
     if not disable_default_stopwords:
         for word in more_stopwords:
             stopwords.add(word)
+
     if stopword_list is not None:
         for word in stopword_list:
             stopwords.add(word)
@@ -259,9 +313,10 @@ def main():
     """
     location, location_str = request_city()
     html = read_page(location)
-    x, y, z = soup_parser(html)
-    wordcloud_from_city(z, place=location_str, num_restaurant=20)
-
+    restaurant_names, restaurant_links, reviews = soup_parser(html)
+    print_reviews(reviews, restaurant_names)
+    #wordcloud_from_city(reviews, place=location_str, num_restaurant=20)
+    wordcloud_reviews(reviews)
 
 main()
 
