@@ -7,6 +7,8 @@ import os
 import urllib.request, urllib.parse, urllib.error
 from bs4 import BeautifulSoup
 import ssl
+from PIL import Image
+from wordcloud import WordCloud, STOPWORDS
 
 default_url = 'https://www.yelp.com/search?find_desc=Restaurants&find_loc='
 ctx = ssl.create_default_context()
@@ -81,11 +83,112 @@ def soup_parser(html):
                 print('='*100)
         else:
             print("No reviews for ", restaurant)
+    return restaurant_names, restaurant_links, reviews
+# def query_restaurants(num_restaurants, place=None, verbosity=1):
+#     num_loop_restaurant = 1+int(num_restaurants/11)
+#     if place == None:
+#         url,_
+def wordcloud_text(text):
+    stopwords = set(STOPWORDS)
+    more_stopwords = ['food','good','bad','came','place','restaurant','really','much','less','more']
+    for word in more_stopwords:
+        stopwords.add(word)
+    wc = WordCloud(background_color='white',max_words=50, stopwords=stopwords,max_font_size=40)
+    _=wc.generate(text)
+    plt.figure(figsize=(10, 7))
+    plt.imshow(wc, interpolation="bilinear")
+    plt.axis("off")
+    plt.show()
+def wordcloud_reviews(review_dict):
+    stopwords = set(STOPWORDS)
+    more_stopwords = ['food', 'good', 'bad', 'came', 'place', 'restaurant', 'really', 'much', 'less', 'more']
+    for word in more_stopwords:
+        stopwords.add(word)
+
+    wc = WordCloud(background_color="white", max_words=50, stopwords=stopwords, max_font_size=40)
+
+    for restaurant in review_dict:
+        text = '\n'.join(review_dict[restaurant])
+        _ = wc.generate(text)
+
+        plt.figure(figsize=(10, 7))
+        plt.title(f"Wordcloud for {restaurant}\n", fontsize=20)
+        plt.imshow(wc, interpolation="bilinear")
+        plt.axis("off")
+        plt.show()
+
+
+def plot_wc(wc, place=None, restaurant=None):
+    plt.figure(figsize=(12, 8))
+
+    if place != None:
+        plt.title("{}\n".format(place), fontsize=20)
+
+    if restaurant != None:
+        plt.title("{}\n".format(restaurant), fontsize=20)
+
+    plt.imshow(wc, interpolation="bilinear")
+    plt.axis("off")
+    plt.show()
+
+# def query_restaurant_place(num_restaurant,place=None,verbosity=1):
+
+def get_reviews_place(num_restaurant=10, num_reviews=20, place=None, verbosity=0):
+    # if place == None:
+    #     df_restaurants = query_restaurant_place(num_restaurant=num_restaurant, verbosity=verbosity)
+    # else:
+    #     df_restaurants = query_restaurant_place(num_restaurant=num_restaurant, place=place, verbosity=verbosity)
+    #
+    # reviews = gather_reviews(df_restaurants, num_reviews=num_reviews, verbosity=verbosity)
+
+    # return reviews
+    pass
+def wordcloud_from_city(review_dict, place=None,num_restaurant=10,num_reviews=20,stopword_list=None,
+                   disable_default_stopwords=False,verbosity=0):
+    # if place == None:
+    #     review_dict = get_reviews_place(num_restaurant=num_restaurant, num_reviews=num_reviews, verbosity=verbosity)
+    # else:
+    #     review_dict = get_reviews_place(num_restaurant=num_restaurant, num_reviews=num_reviews,
+    #                                     place=place, verbosity=verbosity)
+
+    text = ""
+
+    for restaurant in review_dict:
+        text_restaurant = '\n'.join(review_dict[restaurant])
+        text += text_restaurant
+
+    # Add custom stopwords to the default list
+    stopwords = set(STOPWORDS)
+    more_stopwords = ['food', 'good', 'bad', 'best', 'amazing', 'go', 'went', 'came', 'come', 'back', 'place',
+                      'restaurant',
+                      'really', 'much', 'less', 'more', 'order', 'ordered', 'great', 'time', 'wait', 'table',
+                      'everything',
+                      'take', 'definitely', 'sure', 'recommend', 'recommended', 'delicious', 'taste', 'tasty',
+                      'menu', 'service', 'meal', 'experience', 'got', 'night', 'one', 'will', 'made', 'make',
+                      'bit', 'dish', 'dishes', 'well', 'try', 'always', 'never', 'little', 'big', 'small', 'nice',
+                      'excellent']
+    if not disable_default_stopwords:
+        for word in more_stopwords:
+            stopwords.add(word)
+    if stopword_list != None:
+        for word in stopword_list:
+            stopwords.add(word)
+
+    wc = WordCloud(background_color="white", max_words=50, stopwords=stopwords, max_font_size=40, scale=3)
+    _ = wc.generate(text)
+
+    plot_wc(wc, place=place)
+
+    return wc
 
 
 def main():
     location = request_city()
     print(location)
     html = read_page(location)
-    soup_parser(html)
+    x, y, z = soup_parser(html)
+    wordcloud_from_city(z, place="Palo Alto, CA", num_restaurant=20)
+
+
 main()
+
