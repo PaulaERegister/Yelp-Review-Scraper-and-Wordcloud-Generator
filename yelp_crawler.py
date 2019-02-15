@@ -40,6 +40,8 @@ def soup_parser(html):
             if 'lemon' in a.attrs['class'][0]:
                 if 'href' in a.attrs:
                     if '/biz' in a.attrs['href']:
+                        # if len(a.attrs['href'].split(':')) != 1:
+                        #     continue
                         if a.attrs['href'] in restaurant_links or a.attrs['href'].split('-')[0] in seen:
                             continue
                         else:
@@ -57,9 +59,9 @@ def soup_parser(html):
     for i in range(len(restaurant_links)):
         link = 'https://yelp.com'+restaurant_links[i]
         restaurant_links[i] = link
-    df = pd.DataFrame(data={'Link':restaurant_links, 'Name': restaurant_names})
+    # df = pd.DataFrame(data={'Link':restaurant_links, 'Name': restaurant_names})
     reviews = {}
-    for i in range(10):
+    for i in range(1):
         print(f"Gathering top reviews on {restaurant_names[i]} now...")
         review_text = []
         url = restaurant_links[i]
@@ -72,9 +74,13 @@ def soup_parser(html):
                     text = p.get_text().strip()
                     review_text.append(text)
         reviews[str(restaurant_names[i])] = review_text
-    for r in reviews:
-        print(r)
-        print('='*100)
+    for restaurant in restaurant_names:
+        if restaurant in reviews:
+            for review in reviews[restaurant]:
+                print(review)
+                print('='*100)
+        else:
+            print("No reviews for ", restaurant)
 
 
 def main():
