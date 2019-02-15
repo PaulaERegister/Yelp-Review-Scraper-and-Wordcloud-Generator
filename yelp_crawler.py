@@ -14,6 +14,10 @@ ctx.verify_mode = ssl.CERT_NONE
 
 
 def request_city():
+    """
+
+    :return:
+    """
     city_string = input("Please enter the city and state that you want to search for: (Ex: San Jose, CA).\n")
     city = [x.strip() for x in city_string.split(',')]
     if len(city[0].split()) > 1:
@@ -22,6 +26,11 @@ def request_city():
 
 
 def read_page(location):
+    """
+
+    :param location:
+    :return:
+    """
     url = default_url + location[0] + ',+' + location[1]
     print("Opening ", url)
     page = urllib.request.urlopen(url,context=ctx)
@@ -32,6 +41,11 @@ def read_page(location):
 
 
 def get_restaurant_links(soup):
+    """
+
+    :param soup:
+    :return:
+    """
     restaurant_links = []
     seen = []
     for a in soup.find_all('a'):
@@ -50,6 +64,11 @@ def get_restaurant_links(soup):
 
 
 def get_restaurant_names(soup):
+    """
+
+    :param soup:
+    :return:
+    """
     restaurant_names = []
     for a in soup.find_all('a'):
         if 'href' in a.attrs:
@@ -63,13 +82,19 @@ def get_restaurant_names(soup):
 
 
 def get_reviews(restaurant_links, restaurant_names):
+    """
+
+    :param restaurant_links:
+    :param restaurant_names:
+    :return:
+    """
     for i in range(len(restaurant_links)):
         link = 'https://yelp.com'+restaurant_links[i]
         restaurant_links[i] = link
     # df = pd.DataFrame(data={'Link':restaurant_links, 'Name': restaurant_names})
 
     reviews = {}
-    for i in range(1):
+    for i in range(len(restaurant_links)):
         print(f"Gathering top reviews on {restaurant_names[i]} now...")
         review_text = []
         url = restaurant_links[i]
@@ -82,6 +107,16 @@ def get_reviews(restaurant_links, restaurant_names):
                     text = p.get_text().strip()
                     review_text.append(text)
         reviews[str(restaurant_names[i])] = review_text
+    return reviews
+
+
+def print_reviews(reviews, restaurant_names):
+    """
+
+    :param reviews:
+    :param restaurant_names:
+    :return:
+    """
     for restaurant in restaurant_names:
         if restaurant in reviews:
             for review in reviews[restaurant]:
@@ -89,10 +124,14 @@ def get_reviews(restaurant_links, restaurant_names):
                 print('='*100)
         else:
             print("No reviews for", restaurant)
-    return reviews
 
 
 def soup_parser(html):
+    """
+
+    :param html:
+    :return:
+    """
     soup = BeautifulSoup(html, 'html.parser')
 
     restaurant_links = get_restaurant_links(soup)
@@ -102,6 +141,11 @@ def soup_parser(html):
 
 
 def wordcloud_text(text):
+    """
+
+    :param text:
+    :return:
+    """
     stopwords = set(STOPWORDS)
     more_stopwords = ['food','good','bad','came','place','restaurant','really','much','less','more']
     for word in more_stopwords:
@@ -115,6 +159,11 @@ def wordcloud_text(text):
 
 
 def wordcloud_reviews(review_dict):
+    """
+
+    :param review_dict:
+    :return:
+    """
     stopwords = set(STOPWORDS)
     more_stopwords = ['food', 'good', 'bad', 'came', 'place', 'restaurant', 'really', 'much', 'less', 'more']
     for word in more_stopwords:
@@ -134,6 +183,13 @@ def wordcloud_reviews(review_dict):
 
 
 def plot_wc(wc, place=None, restaurant=None):
+    """
+
+    :param wc:
+    :param place:
+    :param restaurant:
+    :return:
+    """
     plt.figure(figsize=(12, 8))
 
     if place is not None:
@@ -149,6 +205,17 @@ def plot_wc(wc, place=None, restaurant=None):
 
 def wordcloud_from_city(review_dict, place=None,num_restaurant=10,num_reviews=20,stopword_list=None,
                    disable_default_stopwords=False,verbosity=0):
+    """
+
+    :param review_dict:
+    :param place:
+    :param num_restaurant:
+    :param num_reviews:
+    :param stopword_list:
+    :param disable_default_stopwords:
+    :param verbosity:
+    :return:
+    """
     # if place == None:
     #     review_dict = get_reviews_place(num_restaurant=num_restaurant, num_reviews=num_reviews, verbosity=verbosity)
     # else:
@@ -187,6 +254,9 @@ def wordcloud_from_city(review_dict, place=None,num_restaurant=10,num_reviews=20
 
 
 def main():
+    """
+
+    """
     location, location_str = request_city()
     html = read_page(location)
     x, y, z = soup_parser(html)
