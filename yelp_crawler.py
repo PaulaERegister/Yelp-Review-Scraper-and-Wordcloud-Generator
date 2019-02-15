@@ -30,20 +30,22 @@ def read_page(location):
     print(f"Reading finished. {len(html)} characters read.")
     return html
 
+
 def get_restaurant_links(soup):
     restaurant_links = []
     seen = []
     for a in soup.find_all('a'):
         if 'class' in a.attrs and'lemon' in a.attrs['class'][0]:
             if 'href' in a.attrs:
-                if '/biz' in a.attrs['href']:
-                    if len(a.attrs['href'].split(':')) != 1:
+                href = a.attrs['href']
+                if '/biz' in href:
+                    if len(href.split(':')) != 1:
                         continue
-                    if a.attrs['href'] in restaurant_links or a.attrs['href'].split('?')[0] in seen:
+                    if href in restaurant_links or href.split('?')[0] in seen:
                         continue
                     else:
-                        seen.append(a.attrs['href'].split('?')[0])
-                        restaurant_links.append(a.attrs['href'])
+                        seen.append(href.split('?')[0])
+                        restaurant_links.append(href)
     return restaurant_links
 
 
@@ -52,17 +54,20 @@ def get_restaurant_names(soup):
     for a in soup.find_all('a'):
         if 'href' in a.attrs:
             if '/biz/' in a.attrs['href']:
-                if 'read' in a.contents[0] or len(a.contents[0]) == 0 or len(a.contents[0]) == 1:
+                contents = a.contents[0]
+                if 'read' in contents or len(contents) == 0 or len(contents) == 1:
                     continue
                 else:
-                    restaurant_names.append(a.contents[0])
+                    restaurant_names.append(contents)
     return restaurant_names
+
 
 def get_reviews(restaurant_links, restaurant_names):
     for i in range(len(restaurant_links)):
         link = 'https://yelp.com'+restaurant_links[i]
         restaurant_links[i] = link
     # df = pd.DataFrame(data={'Link':restaurant_links, 'Name': restaurant_names})
+
     reviews = {}
     for i in range(1):
         print(f"Gathering top reviews on {restaurant_names[i]} now...")
