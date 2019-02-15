@@ -45,6 +45,7 @@ def soup_parser(html):
                         else:
                             seen.append(a.attrs['href'].split('-')[0])
                             restaurant_links.append(a.attrs['href'])
+    for a in soup.find_all('a'):
         if 'href' in a.attrs:
             if '/biz/' in a.attrs['href']:
                 if 'read' in a.contents[0] or len(a.contents[0]) == 0 or len(a.contents[0]) == 1:
@@ -66,7 +67,15 @@ def soup_parser(html):
         html = uh.read()
         soup = BeautifulSoup(html, 'html.parser')
         for p in soup.find_all('p'):
-            print(p)
+            if 'itemprop' in p.attrs:
+                if p.attrs['itemprop']=='description':
+                    text = p.get_text().strip()
+                    review_text.append(text)
+        reviews[str(restaurant_names[i])] = review_text
+    for r in reviews:
+        print(r)
+        print('='*100)
+
 
 def main():
     location = request_city()
