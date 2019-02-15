@@ -1,13 +1,10 @@
-import pandas as pd
-import numpy as np
+"""
+
+"""
 import matplotlib.pyplot as plt
-import re
-import requests
-import os
 import urllib.request, urllib.parse, urllib.error
 from bs4 import BeautifulSoup
 import ssl
-from PIL import Image
 from wordcloud import WordCloud, STOPWORDS
 
 default_url = 'https://www.yelp.com/search?find_desc=Restaurants&find_loc='
@@ -15,15 +12,6 @@ ctx = ssl.create_default_context()
 ctx.check_hostname = False
 ctx.verify_mode = ssl.CERT_NONE
 
-def read_page(location):
-
-    url = default_url + location[0] + ',+' + location[1]
-    print("Opening ", url)
-    page = urllib.request.urlopen(url,context=ctx)
-    print("HTTP status", page.getcode())
-    html = page.read()
-    print(f"Reading finished. {len(html)} characters read.")
-    return html
 
 def request_city():
     city = input("Please enter the city and state that you want to search for: (Ex: San Jose, CA).\n")
@@ -32,23 +20,35 @@ def request_city():
         city[0] = '+'.join(city[0].split())
     return city
 
-def soup_parser(html):
-    soup = BeautifulSoup(html, 'html.parser')
-    restaurant_names = []
+
+def read_page(location):
+    url = default_url + location[0] + ',+' + location[1]
+    print("Opening ", url)
+    page = urllib.request.urlopen(url,context=ctx)
+    print("HTTP status", page.getcode())
+    html = page.read()
+    print(f"Reading finished. {len(html)} characters read.")
+    return html
+
+def get_restaurant_links(soup):
     restaurant_links = []
     seen = []
     for a in soup.find_all('a'):
-        if 'class' in a.attrs:
-            if 'lemon' in a.attrs['class'][0]:
-                if 'href' in a.attrs:
-                    if '/biz' in a.attrs['href']:
-                        # if len(a.attrs['href'].split(':')) != 1:
-                        #     continue
-                        if a.attrs['href'] in restaurant_links or a.attrs['href'].split('-')[0] in seen:
-                            continue
-                        else:
-                            seen.append(a.attrs['href'].split('-')[0])
-                            restaurant_links.append(a.attrs['href'])
+        if 'class' in a.attrs and'lemon' in a.attrs['class'][0]:
+            if 'href' in a.attrs:
+                if '/biz' in a.attrs['href']:
+                    if len(a.attrs['href'].split(':')) != 1:
+                        continue
+                    if a.attrs['href'] in restaurant_links or a.attrs['href'].split('?')[0] in seen:
+                        continue
+                    else:
+                        seen.append(a.attrs['href'].split('?')[0])
+                        restaurant_links.append(a.attrs['href'])
+    return restaurant_links
+
+
+def get_restaurant_names(soup):
+    restaurant_names = []
     for a in soup.find_all('a'):
         if 'href' in a.attrs:
             if '/biz/' in a.attrs['href']:
@@ -56,8 +56,9 @@ def soup_parser(html):
                     continue
                 else:
                     restaurant_names.append(a.contents[0])
-    print(restaurant_links)
-    print(restaurant_names)
+    return restaurant_names
+
+def get_reviews(restaurant_links, restaurant_names):
     for i in range(len(restaurant_links)):
         link = 'https://yelp.com'+restaurant_links[i]
         restaurant_links[i] = link
@@ -83,11 +84,18 @@ def soup_parser(html):
                 print('='*100)
         else:
             print("No reviews for ", restaurant)
+    return reviews
+def soup_parser(html):
+    soup = BeautifulSoup(html, 'html.parser')
+
+    restaurant_links = get_restaurant_links(soup)
+    restaurant_names = get_restaurant_names(soup)
+    reviews = get_reviews(restaurant_links, restaurant_names)
+    print(restaurant_links)
+    print(restaurant_names)
     return restaurant_names, restaurant_links, reviews
-# def query_restaurants(num_restaurants, place=None, verbosity=1):
-#     num_loop_restaurant = 1+int(num_restaurants/11)
-#     if place == None:
-#         url,_
+
+
 def wordcloud_text(text):
     stopwords = set(STOPWORDS)
     more_stopwords = ['food','good','bad','came','place','restaurant','really','much','less','more']
@@ -99,6 +107,8 @@ def wordcloud_text(text):
     plt.imshow(wc, interpolation="bilinear")
     plt.axis("off")
     plt.show()
+
+
 def wordcloud_reviews(review_dict):
     stopwords = set(STOPWORDS)
     more_stopwords = ['food', 'good', 'bad', 'came', 'place', 'restaurant', 'really', 'much', 'less', 'more']
@@ -121,28 +131,17 @@ def wordcloud_reviews(review_dict):
 def plot_wc(wc, place=None, restaurant=None):
     plt.figure(figsize=(12, 8))
 
-    if place != None:
+    if place is not None:
         plt.title("{}\n".format(place), fontsize=20)
 
-    if restaurant != None:
+    if restaurant is not None:
         plt.title("{}\n".format(restaurant), fontsize=20)
 
     plt.imshow(wc, interpolation="bilinear")
     plt.axis("off")
     plt.show()
 
-# def query_restaurant_place(num_restaurant,place=None,verbosity=1):
 
-def get_reviews_place(num_restaurant=10, num_reviews=20, place=None, verbosity=0):
-    # if place == None:
-    #     df_restaurants = query_restaurant_place(num_restaurant=num_restaurant, verbosity=verbosity)
-    # else:
-    #     df_restaurants = query_restaurant_place(num_restaurant=num_restaurant, place=place, verbosity=verbosity)
-    #
-    # reviews = gather_reviews(df_restaurants, num_reviews=num_reviews, verbosity=verbosity)
-
-    # return reviews
-    pass
 def wordcloud_from_city(review_dict, place=None,num_restaurant=10,num_reviews=20,stopword_list=None,
                    disable_default_stopwords=False,verbosity=0):
     # if place == None:
@@ -170,7 +169,7 @@ def wordcloud_from_city(review_dict, place=None,num_restaurant=10,num_reviews=20
     if not disable_default_stopwords:
         for word in more_stopwords:
             stopwords.add(word)
-    if stopword_list != None:
+    if stopword_list is not None:
         for word in stopword_list:
             stopwords.add(word)
 
@@ -184,10 +183,10 @@ def wordcloud_from_city(review_dict, place=None,num_restaurant=10,num_reviews=20
 
 def main():
     location = request_city()
-    print(location)
     html = read_page(location)
-    x, y, z = soup_parser(html)
-    wordcloud_from_city(z, place="Palo Alto, CA", num_restaurant=20)
+    soup_parser(html)
+    # x, y, z = soup_parser(html)
+    # wordcloud_from_city(z, place="Palo Alto, CA", num_restaurant=20)
 
 
 main()
