@@ -1,6 +1,12 @@
 """
-
+Given a location, crawls through Yelp's results for that city, scraping the top restaurant
+name and their links from the HTML using BeautifulSoup. Allows the user to view reviews by
+restaurant before generating a wordcloud for a particular restaurant or for the location,
+using the WordCloud library.
+Derived from work done by Dr. Tirthajyoti Sarkar.
 """
+
+
 import matplotlib.pyplot as plt
 import urllib.request, urllib.parse, urllib.error
 from bs4 import BeautifulSoup
@@ -15,8 +21,10 @@ ctx.verify_mode = ssl.CERT_NONE
 
 def request_city():
     """
-
+    Asks the user for a city and state to use as input.
     :return:
+        city: a list of [city, state]
+        city_string: the original string input by the user
     """
     city_string = input("Please enter the city and state that you want to search for: (Ex: San Jose, CA).\n")
     city = [x.strip() for x in city_string.split(',')]
@@ -223,16 +231,35 @@ def wordcloud_reviews(review_dict):
         stopwords.add(word)
 
     wc = WordCloud(background_color="white", max_words=50, stopwords=stopwords, max_font_size=40)
-    prompt = "Building wordcloud from reviews! "
+    prompt = "Building wordcloud from reviews! Press enter to view a wordcloud for each, or enter a " \
+             "restaurant name to build one from.\n"
+    result = input(prompt)
+    while not result == '':
+        if result in review_dict:
+            wordcloud(wc, review_dict[result], result)
+        else:
+            print("I didn't understand that.")
+            result = input(prompt)
     for restaurant in review_dict:
-        text = '\n'.join(review_dict[restaurant])
-        _ = wc.generate(text)
+        wordcloud(wc, review_dict[restaurant], restaurant)
 
-        plt.figure(figsize=(10, 7))
-        plt.title(f"Wordcloud for {restaurant}\n", fontsize=20)
-        plt.imshow(wc, interpolation="bilinear")
-        plt.axis("off")
-        plt.show()
+
+def wordcloud(wc, restaurant, restaurant_name):
+    """
+
+    :param wc:
+    :param restaurant:
+    :param restaurant_name:
+    :return:
+    """
+    text = '\n'.join(restaurant)
+    _ = wc.generate(text)
+
+    plt.figure(figsize=(10, 7))
+    plt.title(f"Wordcloud for {restaurant_name}\n", fontsize=20)
+    plt.imshow(wc, interpolation="bilinear")
+    plt.axis("off")
+    plt.show()
 
 
 def plot_wc(wc, place=None, restaurant=None):
@@ -269,12 +296,6 @@ def wordcloud_from_city(review_dict, place=None,num_restaurant=10,num_reviews=20
     :param verbosity:
     :return:
     """
-    # if place == None:
-    #     review_dict = get_reviews_place(num_restaurant=num_restaurant, num_reviews=num_reviews, verbosity=verbosity)
-    # else:
-    #     review_dict = get_reviews_place(num_restaurant=num_restaurant, num_reviews=num_reviews,
-    #                                     place=place, verbosity=verbosity)
-
     text = ""
 
     for restaurant in review_dict:
@@ -315,7 +336,7 @@ def main():
     html = read_page(location)
     restaurant_names, restaurant_links, reviews = soup_parser(html)
     print_reviews(reviews, restaurant_names)
-    #wordcloud_from_city(reviews, place=location_str, num_restaurant=20)
+    wordcloud_from_city(reviews, place=location_str, num_restaurant=20)
     wordcloud_reviews(reviews)
 
 main()
