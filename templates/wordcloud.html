@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+</head>
+<body>
+    <p>Tedst</p>
+
+    <table>
+    {% for key, values in reviews.items() %}
+       <tr>
+            <th> {{ key }} </th>
+               {% for v in values %}
+                       <td> {{ v }} </td>
+               {% endfor %}
+       </tr>
+    {% endfor %}
+    </table>
+</body>
+</html>

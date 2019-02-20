@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+</head>
+<body>
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="http://startbootstrap.com">WordTagCloud</a>
+            </div>
+            <div class="collapse navbar-collapse navbar-right navbar-ex1-collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="http://www.github.com/shivam5992/wordcloud/" target="_blank">Code</a>
+                    </li>
+                    <li><a href="http://www.shivambansal.com" target="_blank">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+       <div class="container">
+            <h2><font color="#2a6496">WordTagCloud:</font> Create tag cloud from words</h2>
+            <br>
+
+            <form name="main" action="/" method="Post">
+            <table>
+                <tr>
+                    <td>Enter Location:</td>
+                    <td><input type="text" size=80 name="location" placeholder="Ex. Rochester, NY"></td>
+                </tr>
+                <tr><td>&nbsp;</td></tr>
+                <tr>
+                    <td>Enter a number of restaurants to gather reviews for (Enter 0 for all):</td>
+                    <td><input type="number" size=80 name="num_reviews" placeholder="Ex. 1"></td>
+                </tr>
+                <tr><td>&nbsp;</td></tr>
+                <tr>
+                    <td></td>
+                    <td><input type="submit" value="Create Word Tag Cloud"></td>
+            </table>
+            </form>
+            <hr>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <font color="RED" size="30px">{{ message }}</font>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+                   {% include 'wordcloud.html' %}
+
+        <br><br><br>
+        <h4>Created and Developed by <a href="http://www.shivambansal.com" target="_blank">Shivam Bansal</a></h4>
+   	 </div>
+    <div>
+    <img src="/plot.png" alt="my plot">
+            <img src="/wc.png" alt="my plot">
+
+    </div>
+</body>
+</html>
