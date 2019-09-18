@@ -341,10 +341,10 @@ def plot_wc(wc, place=None, restaurant=None):
 
     plt.imshow(wc, interpolation="bilinear")
     plt.axis("off")
-    # img = BytesIO()
-    # wc.to_image().save(img, 'PNG')
-    # img.seek(0)
-    # return send_file(img, mimetype='image/png')
+    img = BytesIO()
+    wc.to_image().save(img, 'PNG')
+    img.seek(0)
+    return send_file(img, mimetype='image/png')
     plt.show()
 
 
